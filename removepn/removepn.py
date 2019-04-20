@@ -3,6 +3,7 @@ import sys
 import os
 import os.path
 import re
+import eyed3
 
 __author__ = 'mahesh'
 
@@ -20,7 +21,7 @@ def remove_afterpn(name):
     file_part = os.path.basename(name)
 
     index = file_part.find("_PN")
-    replace = file_part[:(index+3)] + ".mp3"
+    replace = file_part[:(index + 3)] + ".mp3"
     return os.path.join(dir_part, replace)
 
 
@@ -35,7 +36,7 @@ def remove_num(name):
     replace = file_part
     if m:
         replace = file_part[m.end(1):]
-        print replace
+        print(replace)
 
     return os.path.join(dir_part, replace)
 
@@ -47,11 +48,12 @@ def remove_1mp3_helper(suffix, name):
     if file_part.endswith(suffix):
         replace = file_part.replace(suffix, '.mp3')
         check = os.path.join(dir_part, replace)
+
         if os.path.isfile(check):
-            print 'delete %s' % file_part
+            print('delete %s' % file_part)
             os.unlink(name)
         else:
-            print 'rename %s to %s' % (name, check)
+            print('rename %s to %s' % (name, check))
             os.rename(name, check)
 
 
@@ -59,17 +61,42 @@ def remove_1mp3(name):
     remove_1mp3_helper(' 1.mp3', name)
     remove_1mp3_helper(' 2.mp3', name)
     remove_1mp3_helper(' 3.mp3', name)
+    return name  # do nothing, all actions done
+
+
+def get_clean_file_name(name):
+    dir_part = os.path.dirname(name)
+    file_part = os.path.basename(name)
+
+    suffix = "(clean).mp3"
+    if not file_part.endswith(suffix):
+        replace = file_part.replace(".mp3", suffix)
+        replace = os.path.join(dir_part, replace)
+        return replace
 
     return name
-    # return os.path.join(dir_part, file_part)
 
 
-def rename_files_in_dir(arg, action):
+def add_clean_to_id3_comment(name):
+    mp3file = eyed3.load(name)
+    comments = mp3file.tag.title
+    if "clean" not in comments:
+        comments += " (clean)"
+        mp3file.tag.title = comments
+        mp3file.tag.save()
+
+
+def mark_clean(name):
+    add_clean_to_id3_comment(name)
+    return get_clean_file_name(name)
+
+
+def process_files_in_dir(arg, action):
     for file_or_dir in os.listdir(arg):
         process_file_or_dir(os.path.join(arg, file_or_dir), action)
 
 
-def rename_file(arg, action):
+def process_file(arg, action):
     replace = arg
     if action == 'pn':
         replace = remove_pn(arg)
@@ -79,6 +106,8 @@ def rename_file(arg, action):
         replace = remove_1mp3(arg)
     elif action == 'afterpn':
         replace = remove_afterpn(arg)
+    elif action == 'markclean':
+        replace = mark_clean(arg)
 
     if replace != arg:
         if not os.path.isfile(replace):
@@ -96,9 +125,9 @@ def process_file_or_dir(arg, action):
     arg = os.path.expanduser(arg)
     arg = os.path.abspath(arg)
     if os.path.isdir(arg):
-        rename_files_in_dir(arg, action)
+        process_files_in_dir(arg, action)
     elif os.path.isfile(arg):
-        rename_file(arg, action)
+        process_file(arg, action)
     else:
         return False
     return True
