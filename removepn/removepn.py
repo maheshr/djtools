@@ -79,6 +79,9 @@ def get_clean_file_name(name):
 
 def add_clean_to_id3_comment(name):
     mp3file = eyed3.load(name)
+    if not mp3file:
+        print("Failed to load", name)
+        return
     comments = mp3file.tag.title
     if "clean" not in comments:
         comments += " (clean)"
