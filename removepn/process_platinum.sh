@@ -1,2 +1,2 @@
 #! /usr/bin/env bash
-python removepn.py ~/Music/Platinum\ Notes/
+pipenv run python ./removepn.py ~/Music/Platinum\ Notes/
