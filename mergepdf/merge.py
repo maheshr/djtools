@@ -1,5 +1,4 @@
 import sys
-import os
 import os.path as path
 
 from PyPDF2 import PdfFileMerger
@@ -21,7 +20,8 @@ def merge_files(input_files, output):
 
 def main(args):
     if len(args) < 3:
-        print("Error: Must pass pdf files to merge.\nA minimum of two files must be passed in followed by the output file path")
+        print("Error: Must pass pdf files to merge.\nA minimum of two \
+              files must be passed in followed by the output file path")
         return -1
 
     merge_files(args[:-1], args[-1])
